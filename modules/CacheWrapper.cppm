@@ -57,7 +57,7 @@ export namespace cache {
         while (true) {
             std::cout << "Enter n (-1 to exit): " << std::endl;
 
-            if (!(std::cin >> n)){
+            if (!(std::cin >> n)) {
                 std::cout << "Invalid input" << std::endl;
 
                 std::cin.clear();
@@ -70,12 +70,10 @@ export namespace cache {
             }
 
             try {
-                std::cout  << Fibonacci(n) << std::endl;
-            }
-            catch (const std::exception& e) {
+                std::cout << Fibonacci(n) << std::endl;
+            } catch (const std::exception &e) {
                 std::cout << "Error: " << e.what() << std::endl;
             }
-
         }
     }
 }

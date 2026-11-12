@@ -166,3 +166,67 @@ TEST(LFUCacheTest, OperatorIncreasesFrequency) {
     EXPECT_EQ(300, cache.get(3));
     EXPECT_THROW(cache.get(2), std::out_of_range);
 }
+
+TEST(LFUCacheTest, NegativeTTL) {
+    EXPECT_THROW(
+        cache::LFUCache cache(5, std::chrono::seconds(-1)),
+        std::invalid_argument
+    );
+}
+
+TEST(LFUCacheTest, TTLDisabled) {
+    cache::LFUCache cache(5);
+
+    cache.put(1, 100);
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    EXPECT_EQ(cache.get(1), 100);
+}
+
+TEST(LFUCacheTest, TTLNotExpired) {
+    cache::LFUCache cache(5, std::chrono::seconds(3));
+
+    cache.put(1, 100);
+
+    EXPECT_EQ(cache.get(1), 100);
+}
+
+TEST(LFUCacheTest, TTLExpired) {
+    cache::LFUCache cache(5, std::chrono::seconds(1));
+
+    cache.put(1, 100);
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    EXPECT_THROW(cache.get(1), std::out_of_range);
+    EXPECT_FALSE(cache.contains(1));
+}
+
+TEST(LFUCacheTest, UpdateResetsTTL) {
+    cache::LFUCache cache(5, std::chrono::seconds(2));
+
+    cache.put(1, 100);
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    cache.put(1, 200);
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    EXPECT_EQ(cache.get(1), 200);
+}
+
+TEST(LFUCacheTest, ExpiredElementCanBeInsertedAgain) {
+    cache::LFUCache cache(5, std::chrono::seconds(1));
+
+    cache.put(1, 100);
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    EXPECT_FALSE(cache.contains(1));
+
+    cache.put(1, 200);
+
+    EXPECT_EQ(cache.get(1), 200);
+}
