@@ -1,28 +1,31 @@
 #include <iostream>
-#include <gtest/gtest.h>
+
 import LRUCache;
-import  LFUCache;
+import LFUCache;
 import CacheWrapper;
 
+int main() {
+    std::cout << "Choose cache type:" << std::endl;
+    std::cout << "1. LRU" << std::endl;
+    std::cout << "2. LFU" << std::endl;
 
+    int choice;
+    std::cin >> choice;
 
-int main(int argc, char** argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
-
-void run(CacheWrapper &wrapper) {
-    int n;
-
-    while (true) {
-        std::cout << "Enter n (-1 to exit): ";
-        std::cin >> n;
-
-        if (n == -1) {
-            break;
-        }
-
-        std::cout << "Fibonacci: " << wrapper.Fibonacci(n) << '\n';
+    if (choice == 1) {
+        cache::LRUCache cache(100);
+        cache::CacheWrapper wrapper(cache);
+        wrapper.run();
     }
-}
+    else if (choice == 2) {
+        cache::LFUCache cache(100);
+        cache::CacheWrapper wrapper(cache);
+        wrapper.run();
+    }
+    else {
+        std::cout << "Invalid choice" << std::endl;
+        return 1;
+    }
 
+    return 0;
+}

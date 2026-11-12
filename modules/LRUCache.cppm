@@ -1,60 +1,67 @@
-
 module;
 
 #include <list>
 #include <unordered_map>
 #include <stdexcept>
+#include <cstdint>
 
 export module LRUCache;
 
 import ICache;
 
-export class LRUCache : public ICache {
-private:
-    std::size_t capacity;
-    std::list<std::pair<int, long long>> cache;
-    std::unordered_map<int, std::list<std::pair<int, long long>>::iterator> cache_map;
+export namespace cache {
+    class LRUCache : public ICache {
+    public:
+        LRUCache(std::size_t capacity);
+        void put(std::int32_t key, std::int64_t value) override;
+        std::int64_t get(std::int32_t key) override;
+        std::int64_t operator[](std::int32_t key) override;
+        bool contains(std::int32_t key) override;
 
-public:
-    LRUCache(std::size_t capacity);
-    void put(int key, long long value) override;
-    long long get(int key) override;
-    long long operator[](int key) override;
-};
+    private:
+        std::size_t capacity_;
+        std::list<std::pair<std::int32_t, std::int64_t>> cache_;
+        std::unordered_map<std::int32_t, std::list<std::pair<std::int32_t, std::int64_t>>::iterator> cache_map_;
+    };
 
-LRUCache::LRUCache(std::size_t capacity) : capacity(capacity) {
-    if (capacity == 0) {
-        throw std::invalid_argument("Capacity must be greater than 0");
-    }
-}
-
-void LRUCache::put(int key, long long value) {
-    auto it = cache_map.find(key);
-    if (it != cache_map.end()) {
-        it->second->second = value;
-        cache.splice(cache.begin(), cache, it->second);
-        return;
+    LRUCache::LRUCache(std::size_t capacity) : capacity_(capacity) {
+        if (capacity == 0) {
+            throw std::invalid_argument("Capacity must be greater than 0");
+        }
     }
 
-    if (cache.size() == capacity) {
-        cache_map.erase(cache.back().first);
-        cache.pop_back();
+    void LRUCache::put(std::int32_t key, std::int64_t value) {
+        auto it = cache_map_.find(key);
+        if (it != cache_map_.end()) {
+            it->second->second = value;
+            cache_.splice(cache_.begin(), cache_, it->second);
+            return;
+        }
+
+        if (cache_.size() == capacity_) {
+            cache_map_.erase(cache_.back().first);
+            cache_.pop_back();
+        }
+
+        cache_.emplace_front(key, value);
+        cache_map_[key] = cache_.begin();
     }
 
-    cache.emplace_front(key, value);
-    cache_map[key] = cache.begin();
-}
+    std::int64_t LRUCache::get(std::int32_t key) {
+        auto it = cache_map_.find(key);
+        if (it == cache_map_.end()) {
+            throw std::out_of_range("Key not found");
+        }
 
-long long LRUCache::get(int key) {
-    auto it = cache_map.find(key);
-    if (it == cache_map.end()) {
-        throw std::out_of_range("Key not found");
+        cache_.splice(cache_.begin(), cache_, it->second);
+        return it->second->second;
     }
 
-    cache.splice(cache.begin(), cache, it->second);
-    return it->second->second;
-}
+    std::int64_t LRUCache::operator[](std::int32_t key) {
+        return get(key);
+    }
 
-long long LRUCache::operator[](int key) {
-    return get(key);
+    bool LRUCache::contains(std::int32_t key) {
+        return cache_map_.find(key) != cache_map_.end();
+    }
 }

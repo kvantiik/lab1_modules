@@ -16,5 +16,17 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(googletest)
 
+enable_testing()
+
 add_subdirectory(modules)
+
+add_executable(lab1
+        src/main.cpp
+)
+
+target_link_libraries(lab1
+        PRIVATE
+        cache_modules
+)
+
 add_subdirectory(tests)
