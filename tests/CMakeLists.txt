@@ -1,15 +1,13 @@
-add_executable(lab1
-        ../src/main.cpp
+add_executable(cache_tests
         LRUCacheTest.cpp
         LFUCacheTest.cpp
 )
 
-target_link_libraries(lab1
+target_link_libraries(cache_tests
         PRIVATE
         cache_modules
-        GTest::gtest
+        GTest::gtest_main
 )
 
-enable_testing()
 include(GoogleTest)
-gtest_discover_tests(lab1)
+gtest_discover_tests(cache_tests)

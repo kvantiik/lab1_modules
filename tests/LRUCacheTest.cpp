@@ -4,7 +4,7 @@
 import LRUCache;
 
 TEST(LRUCacheTest, Constructor) {
-    LRUCache cache(5);
+    cache::LRUCache cache(5);
 
     cache.put(1, 100);
 
@@ -12,11 +12,11 @@ TEST(LRUCacheTest, Constructor) {
 }
 
 TEST(LRUCacheTest, ZeroCapacity) {
-    EXPECT_THROW(LRUCache cache(0), std::invalid_argument);
+    EXPECT_THROW(cache::LRUCache cache(0), std::invalid_argument);
 }
 
 TEST(LRUCacheTest, Put) {
-    LRUCache cache(3);
+    cache::LRUCache cache(3);
 
     cache.put(1, 100);
 
@@ -24,7 +24,7 @@ TEST(LRUCacheTest, Put) {
 }
 
 TEST(LRUCacheTest, PutSeveral) {
-    LRUCache cache(3);
+    cache::LRUCache cache(3);
 
     cache.put(1, 100);
     cache.put(2, 200);
@@ -36,7 +36,7 @@ TEST(LRUCacheTest, PutSeveral) {
 }
 
 TEST(LRUCacheTest, Get) {
-    LRUCache cache(3);
+    cache::LRUCache cache(3);
 
     cache.put(1, 100);
 
@@ -44,13 +44,13 @@ TEST(LRUCacheTest, Get) {
 }
 
 TEST(LRUCacheTest, GetException) {
-    LRUCache cache(3);
+    cache::LRUCache cache(3);
 
     EXPECT_THROW(cache.get(42), std::out_of_range);
 }
 
 TEST(LRUCacheTest, UpdateValue) {
-    LRUCache cache(3);
+    cache::LRUCache cache(3);
 
     cache.put(1, 100);
     cache.put(1, 500);
@@ -59,7 +59,7 @@ TEST(LRUCacheTest, UpdateValue) {
 }
 
 TEST(LRUCacheTest, Eviction) {
-    LRUCache cache(2);
+    cache::LRUCache cache(2);
 
     cache.put(1, 100);
     cache.put(2, 200);
@@ -71,7 +71,7 @@ TEST(LRUCacheTest, Eviction) {
 }
 
 TEST(LRUCacheTest, GetChangesOrder) {
-    LRUCache cache(2);
+    cache::LRUCache cache(2);
 
     cache.put(1, 100);
     cache.put(2, 200);
@@ -85,7 +85,7 @@ TEST(LRUCacheTest, GetChangesOrder) {
 }
 
 TEST(LRUCacheTest, UpdateChangesOrder) {
-    LRUCache cache(2);
+    cache::LRUCache cache(2);
 
     cache.put(1, 100);
     cache.put(2, 200);
@@ -99,7 +99,7 @@ TEST(LRUCacheTest, UpdateChangesOrder) {
 }
 
 TEST(LRUCacheTest, MultipleEvictions) {
-    LRUCache cache(2);
+    cache::LRUCache cache(2);
 
     cache.put(1, 100);
     cache.put(2, 200);
@@ -115,7 +115,7 @@ TEST(LRUCacheTest, MultipleEvictions) {
 }
 
 TEST(LRUCacheTest, Operator) {
-    LRUCache cache(3);
+    cache::LRUCache cache(3);
 
     cache.put(1, 100);
 
@@ -123,8 +123,61 @@ TEST(LRUCacheTest, Operator) {
 }
 
 TEST(LRUCacheTest, OperatorException) {
-    LRUCache cache(3);
+    cache::LRUCache cache(3);
 
     EXPECT_THROW(cache[42], std::out_of_range);
 }
 
+TEST(LRUCacheTest, NegativeTTL) {
+    EXPECT_THROW(
+        cache::LRUCache cache(5, std::chrono::seconds(-1)),
+        std::invalid_argument
+    );
+}
+
+TEST(LRUCacheTest, TTLDisabled) {
+    cache::LRUCache cache(5);
+
+    cache.put(1, 100);
+
+    EXPECT_TRUE(cache.contains(1));
+    EXPECT_EQ(cache.get(1), 100);
+}
+
+TEST(LRUCacheTest, TTLNotExpired) {
+    cache::LRUCache cache(5, std::chrono::seconds(10));
+
+    cache.put(1, 100);
+
+    EXPECT_TRUE(cache.contains(1));
+    EXPECT_EQ(cache.get(1), 100);
+}
+
+TEST(LRUCacheTest, UpdateResetsTTL) {
+    cache::LRUCache cache(5, std::chrono::seconds(3));
+
+    cache.put(1, 100);
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    cache.put(1, 500);
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    EXPECT_TRUE(cache.contains(1));
+    EXPECT_EQ(cache.get(1), 500);
+}
+
+TEST(LRUCacheTest, ExpiredElementCanBeInsertedAgain) {
+    cache::LRUCache cache(1, std::chrono::seconds(1));
+
+    cache.put(1, 100);
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    EXPECT_FALSE(cache.contains(1));
+
+    cache.put(2, 200);
+
+    EXPECT_EQ(cache.get(2), 200);
+}
